@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>U.S. Cervical Cancer Prevention Access Atlas</title>
+<meta name="description" content="A geospatial-intelligence atlas of barriers to cervical cancer prevention across 3,109 U.S. counties, with tools for state and county health departments, funders and policymakers, and community groups."/>
+<meta property="og:title" content="U.S. Cervical Cancer Prevention Access Atlas"/>
+<meta property="og:description" content="Where women face the steepest barriers to cervical cancer prevention, county by county, and what to do about it."/>
+<meta property="og:image" content="https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=1200&q=70"/>
+<meta name="theme-color" content="#070d19"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+:root{
+  --bg:#070d19; --panel:#0d1627; --panel2:#111d33; --line:#1d2a44; --ink:#e7eef8; --muted:#9db0c9;
+  --teal:#2dd4bf; --teal2:#14b8a6; --amber:#fbbf24; --hot:#f03b20; --deep:#bd0026;
+  --lbg:#f4f7fb; --lpanel:#ffffff; --link:#0f172a; --lmuted:#526178; --lline:#e2e8f1;
+  --r:16px; --shadow:0 20px 60px rgba(0,0,0,.35);
+  --hfont:"Space Grotesk",Inter,system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{overflow-x:clip}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased}
+a{color:var(--teal)}
+img{max-width:100%;display:block}
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+.num{font-variant-numeric:tabular-nums}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+
+/* ---------- nav ---------- */
+.nav{position:sticky;top:0;z-index:1000;background:rgba(7,13,25,.78);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,.06)}
+.nav .wrap{display:flex;align-items:center;gap:22px;height:62px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--ink);text-decoration:none;font-family:var(--hfont);font-weight:700;letter-spacing:-.01em;white-space:nowrap}
+.brand small{display:block;font-family:Inter;font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase}
+.navlinks{display:flex;gap:4px;margin-left:auto;overflow-x:auto}
+.navlinks a{color:var(--muted);text-decoration:none;font-size:13.5px;padding:8px 11px;border-radius:9px;white-space:nowrap}
+.navlinks a:hover{color:var(--ink);background:rgba(255,255,255,.06)}
+
+/* ---------- hero ---------- */
+.hero{position:relative;min-height:92vh;display:flex;align-items:center;overflow:hidden;isolation:isolate;
+  background:#050a14 url("https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=2400&q=70") center/cover no-repeat}
+.hero:before{content:"";position:absolute;inset:0;z-index:-1;
+  background:linear-gradient(90deg,rgba(5,10,20,.96) 0%,rgba(5,10,20,.82) 38%,rgba(5,10,20,.35) 75%,rgba(5,10,20,.55) 100%),
+             linear-gradient(0deg,rgba(7,13,25,1) 0%,rgba(7,13,25,0) 28%)}
+.hero:after{content:"";position:absolute;inset:0;z-index:-1;opacity:.18;pointer-events:none;
+  background-image:linear-gradient(rgba(45,212,191,.35) 1px,transparent 1px),linear-gradient(90deg,rgba(45,212,191,.35) 1px,transparent 1px);
+  background-size:64px 64px;mask-image:radial-gradient(ellipse at 70% 40%,#000 0%,transparent 70%)}
+.hero .wrap{width:100%;padding-top:70px;padding-bottom:90px}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--teal);font-weight:600}
+.pulse{width:8px;height:8px;border-radius:50%;background:var(--teal);box-shadow:0 0 0 0 rgba(45,212,191,.7);animation:pulse 2.2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(45,212,191,.6)}70%{box-shadow:0 0 0 12px rgba(45,212,191,0)}100%{box-shadow:0 0 0 0 rgba(45,212,191,0)}}
+.hero h1{font-family:var(--hfont);font-size:clamp(38px,6vw,76px);line-height:1.02;letter-spacing:-.03em;margin:18px 0 18px;max-width:900px}
+.hero h1 em{font-style:normal;background:linear-gradient(90deg,#5eead4,#2dd4bf 40%,#fbbf24);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lead{font-size:clamp(17px,1.6vw,20px);color:#c6d3e6;max-width:680px;margin:0 0 28px}
+.btns{display:flex;flex-wrap:wrap;gap:12px}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.04);color:var(--ink);padding:12px 18px;border-radius:12px;font-weight:600;font-size:14.5px;text-decoration:none;transition:.2s}
+.btn:hover{border-color:var(--teal);background:rgba(45,212,191,.08)}
+.btn.primary{background:linear-gradient(135deg,#2dd4bf,#14b8a6);color:#04221f;border:0;box-shadow:0 10px 30px rgba(20,184,166,.35)}
+.btn.primary:hover{filter:brightness(1.07)}
+.roles{margin-top:30px}
+.roles .lab{font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:10px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid rgba(255,255,255,.14);background:rgba(13,22,39,.65);color:#dbe6f5;padding:8px 13px;border-radius:999px;font-size:13.5px}
+.chip:hover{border-color:var(--teal);color:#fff}
+.coords{position:absolute;right:28px;bottom:26px;font:500 11.5px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(157,176,201,.75);text-align:right;letter-spacing:.06em}
+.coords b{color:var(--teal);font-weight:500}
+
+/* ---------- stats ---------- */
+.stats{position:relative;z-index:2;margin-top:-64px}
+.statgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.stat{background:linear-gradient(180deg,rgba(17,29,51,.92),rgba(13,22,39,.92));border:1px solid var(--line);border-radius:var(--r);padding:20px 20px 18px;box-shadow:var(--shadow)}
+.stat .v{font-family:var(--hfont);font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.05}
+.stat .v.t{color:var(--teal)} .stat .v.h{color:#ff7a59} .stat .v.a{color:var(--amber)}
+.stat .k{color:var(--muted);font-size:13px;margin-top:6px}
+.finding{margin:34px 0 0;padding:22px 26px;border-radius:var(--r);border:1px solid rgba(45,212,191,.28);
+  background:linear-gradient(90deg,rgba(45,212,191,.12),rgba(45,212,191,.02));font-size:clamp(17px,1.8vw,21px);line-height:1.45;color:#e9f6f4}
+.finding b{color:#fff}
+
+/* ---------- sections ---------- */
+section{scroll-margin-top:62px}
+.sec{padding:100px 0}
+.sec.light{background:var(--lbg);color:var(--link)}
+.sec.light .muted{color:var(--lmuted)}
+.sh{max-width:820px;margin-bottom:40px}
+.sn{font:600 12.5px/1 ui-monospace,SFMono-Regular,Menlo,monospace;letter-spacing:.14em;color:var(--teal2);text-transform:uppercase}
+.sec.dark .sn{color:var(--teal)}
+.sh h2{font-family:var(--hfont);font-size:clamp(30px,3.6vw,46px);letter-spacing:-.025em;line-height:1.08;margin:12px 0 14px}
+.sh p{font-size:17.5px;margin:0;color:var(--lmuted)}
+.sec.dark .sh p{color:var(--muted)}
+.muted{color:var(--muted)}
+
+/* why it matters */
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 0 34px}
+.fact{background:#fff;border:1px solid var(--lline);border-radius:14px;padding:20px}
+.fact .v{font-family:var(--hfont);font-size:32px;font-weight:700;color:#0f766e;letter-spacing:-.02em}
+.fact .k{color:var(--lmuted);font-size:14px}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:22px}
+.pcard{background:#fff;border:1px solid var(--lline);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.06);display:flex;flex-direction:column}
+.pimg{position:relative;height:230px;background:linear-gradient(135deg,#0f766e,#0b1424)}
+.pimg img{width:100%;height:100%;object-fit:cover}
+.pimg:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,0) 55%,rgba(0,0,0,.55))}
+.pimg .tag{position:absolute;left:14px;bottom:12px;z-index:2;color:#fff;font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;font-weight:700}
+.pbody{padding:20px 22px 22px}
+.pbody h3{font-family:var(--hfont);font-size:21px;margin:0 0 8px;letter-spacing:-.01em}
+.pbody p{margin:0;color:var(--lmuted);font-size:15px}
+.credit{font-size:11px;color:#8a97ab;margin-top:10px}
+.ribbonline{display:flex;align-items:center;gap:12px;margin-top:30px;color:var(--lmuted);font-size:14.5px}
+
+/* ---------- explore ---------- */
+.explore{display:grid;grid-template-columns:330px 1fr;gap:18px;align-items:stretch}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.plab{font-size:11.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:700;margin:4px 0 10px}
+.search{position:relative}
+.search input,.sel{width:100%;background:#0a1222;border:1px solid var(--line);color:var(--ink);border-radius:11px;padding:12px 13px 12px 38px;font:inherit;font-size:14.5px}
+.sel{padding-left:12px;appearance:none;background-image:linear-gradient(45deg,transparent 50%,#9db0c9 50%),linear-gradient(135deg,#9db0c9 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+.search svg{position:absolute;left:12px;top:13px;opacity:.6}
+.results{position:absolute;left:0;right:0;top:calc(100% + 6px);background:#0b1426;border:1px solid var(--line);border-radius:12px;overflow:hidden;z-index:1200;box-shadow:var(--shadow);display:none}
+.results div{padding:10px 13px;font-size:14px;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.04)}
+.results div small{color:var(--muted)}
+.results div.on,.results div:hover{background:rgba(45,212,191,.12)}
+.layers{display:flex;flex-direction:column;gap:7px}
+.lbtn{display:flex;align-items:center;gap:11px;text-align:left;background:#0a1222;border:1px solid var(--line);color:var(--ink);padding:10px 12px;border-radius:11px}
+.lbtn .rmp{flex:none;width:38px;height:10px;border-radius:3px}
+.lbtn b{display:block;font-size:14px;font-weight:600}
+.lbtn span{display:block;font-size:11.5px;color:var(--muted)}
+.lbtn.on{border-color:var(--teal);background:rgba(45,212,191,.08);box-shadow:inset 0 0 0 1px var(--teal)}
+.mapbox{position:relative;border-radius:var(--r);overflow:hidden;border:1px solid var(--line);min-height:660px;background:#0a1322}
+#map{position:absolute;inset:0;background:#0a1322}
+.leaflet-container{background:#0a1322;font-family:Inter,system-ui,sans-serif}
+.legend{background:rgba(9,16,30,.9);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:12px;padding:12px 14px;color:var(--ink);min-width:200px;font-size:12.5px}
+.legend h4{margin:0 0 8px;font-size:12.5px;font-weight:700}
+.lrow{display:flex;align-items:center;gap:9px;margin:4px 0}
+.sw{width:16px;height:12px;border-radius:3px;flex:none;border:1px solid rgba(255,255,255,.15)}
+.lrow small{color:var(--muted);margin-left:auto;padding-left:10px}
+.leaflet-tooltip.tt{background:#0b1426;color:var(--ink);border:1px solid var(--teal);border-radius:10px;padding:8px 11px;font-size:13px;box-shadow:var(--shadow)}
+.leaflet-tooltip.tt:before{display:none}
+.leaflet-control-attribution{background:rgba(7,13,25,.75)!important;color:#7f91ab!important;font-size:10.5px!important}
+.leaflet-control-attribution a{color:#9db0c9!important}
+.leaflet-bar a{background:#0d1627;color:var(--ink);border-color:var(--line)}
+.leaflet-bar a:hover{background:#13213a;color:#fff}
+.mapnote{position:absolute;top:14px;left:50%;transform:translateX(-50%);z-index:800;background:rgba(9,16,30,.92);border:1px solid var(--teal);color:var(--ink);padding:9px 14px;border-radius:999px;font-size:13px;display:none;gap:10px;align-items:center;white-space:nowrap}
+.mapnote button{background:none;border:0;color:var(--teal);font-weight:700}
+.hint{font-size:12.5px;color:var(--muted);margin-top:10px}
+.layernote{font-size:12.5px;color:var(--muted);margin-top:10px;line-height:1.5}
+
+/* ---------- county profile ---------- */
+.prof{display:grid;grid-template-columns:1.05fr 1fr;gap:20px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:24px}
+.cty{font-family:var(--hfont);font-size:32px;line-height:1.1;letter-spacing:-.02em;margin:0}
+.cst{color:var(--muted);margin:4px 0 14px}
+.badges{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:18px}
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:5px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)}
+.badge i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.big{font-size:20px;line-height:1.45;margin:0 0 18px}
+.big b{color:#fff}
+.track{position:relative;height:12px;border-radius:999px;background:linear-gradient(90deg,#ffffb2,#fecc5c,#fd8d3c,#f03b20,#bd0026);margin:30px 0 30px}
+.mk{position:absolute;top:-7px;width:3px;height:26px;border-radius:2px;transform:translateX(-50%)}
+.mk span{position:absolute;top:-22px;left:50%;transform:translateX(-50%);font-size:11px;white-space:nowrap;color:var(--muted)}
+.mk.c{background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.18)} .mk.c span{color:#fff;font-weight:700}
+.mk.s,.mk.u{background:#8aa0bf} .mk.s span,.mk.u span{top:26px}
+.means{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.25);border-radius:14px;padding:16px 18px;margin:6px 0 18px}
+.means h4{margin:0 0 8px;font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal)}
+.means ul{margin:0;padding-left:18px} .means li{margin:5px 0;color:#d7e3f2}
+.acts{display:flex;flex-wrap:wrap;gap:9px}
+.btn.sm{padding:9px 13px;font-size:13.5px}
+.metric{margin:0 0 20px}
+.metric .mh{display:flex;justify-content:space-between;gap:10px;font-size:14px;margin-bottom:8px}
+.metric .mh span{color:var(--muted);font-size:12.5px}
+.bar{display:grid;grid-template-columns:70px 1fr 54px;align-items:center;gap:10px;margin:5px 0;font-size:12.5px}
+.bar .lb{color:var(--muted)}
+.bar .tr{height:9px;background:#0a1222;border-radius:999px;overflow:hidden;position:relative}
+.bar .fl{height:100%;border-radius:999px}
+.bar .vv{text-align:right;font-weight:600}
+.goal{position:absolute;top:-3px;bottom:-3px;width:2px;background:#fbbf24}
+.ctx{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:6px}
+.ctx div{background:#0a1222;border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+.ctx b{font-family:var(--hfont);font-size:24px;display:block}
+.ctx small{color:var(--muted);font-size:12px}
+.empty{text-align:center;padding:60px 20px;color:var(--muted)}
+.cmp{margin-top:18px}
+.cmptbl{width:100%;border-collapse:collapse;margin-top:12px;font-size:13.5px}
+.cmptbl th,.cmptbl td{padding:8px 6px;border-bottom:1px solid var(--line);text-align:right}
+.cmptbl th:first-child,.cmptbl td:first-child{text-align:left;color:var(--muted);font-weight:500}
+
+/* ---------- priorities ---------- */
+.tctl{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:16px}
+.tctl .sel,.tctl input[type=text]{width:auto;min-width:200px;background:#fff;color:var(--link);border:1px solid var(--lline);border-radius:11px;padding:11px 13px;font:inherit;font-size:14px}
+.tctl .sel{padding-right:34px;background-color:#fff;background-image:linear-gradient(45deg,transparent 50%,#526178 50%),linear-gradient(135deg,#526178 50%,transparent 50%);background-position:calc(100% - 18px) 52%,calc(100% - 13px) 52%;background-size:5px 5px;background-repeat:no-repeat}
+.tog{display:inline-flex;align-items:center;gap:8px;font-size:14px;color:var(--lmuted);background:#fff;border:1px solid var(--lline);border-radius:11px;padding:10px 13px}
+.btn.l{background:#0f172a;color:#fff;border:0}
+.btn.l:hover{background:#1e293b}
+.btn.lo{background:#fff;color:#0f172a;border:1px solid var(--lline)}
+.tblwrap{background:#fff;border:1px solid var(--lline);border-radius:16px;overflow:auto;box-shadow:0 10px 30px rgba(15,23,42,.05)}
+table.pt{width:100%;border-collapse:collapse;font-size:14px;min-width:980px}
+.pt th{position:sticky;top:0;background:#f8fafc;text-align:left;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--lmuted);padding:12px 12px;border-bottom:1px solid var(--lline);cursor:pointer;white-space:nowrap}
+.pt th.r,.pt td.r{text-align:right}
+.pt td{padding:11px 12px;border-bottom:1px solid #eef2f7;white-space:nowrap}
+.pt tr:hover td{background:#f5fbfa}
+.pt a{color:#0f766e;font-weight:600;text-decoration:none;cursor:pointer}
+.lvl{display:inline-flex;align-items:center;gap:7px;font-weight:600;font-size:13px}
+.lvl i{width:10px;height:10px;border-radius:3px;display:inline-block;border:1px solid rgba(0,0,0,.12)}
+.dbdot{color:#bd0026;font-weight:800}
+.tfoot{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:14px;flex-wrap:wrap}
+
+/* ---------- targeting ---------- */
+.strats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:22px}
+.strat{text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;color:var(--ink);position:relative}
+.strat .dot{width:12px;height:12px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:-1px}
+.strat b{font-size:16px}
+.strat p{margin:8px 0 0;color:var(--muted);font-size:13.5px}
+.strat.on{border-color:var(--teal);background:linear-gradient(180deg,rgba(45,212,191,.10),rgba(13,22,39,1));box-shadow:inset 0 0 0 1px var(--teal)}
+.rec{position:absolute;top:-11px;left:16px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:#04221f;background:var(--teal);padding:3px 8px;border-radius:999px;font-weight:800}
+.tgrid{display:grid;grid-template-columns:1fr 1.1fr;gap:20px}
+.slider{margin:6px 0 4px}
+input[type=range]{width:100%;accent-color:#2dd4bf}
+.bud{display:flex;justify-content:space-between;align-items:baseline}
+.bud b{font-family:var(--hfont);font-size:28px}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.kpi{background:#0a1222;border:1px solid var(--line);border-radius:14px;padding:15px}
+.kpi .v{font-family:var(--hfont);font-size:28px;font-weight:700;line-height:1.1}
+.kpi .k{color:var(--muted);font-size:12.5px;margin-top:4px}
+.takeaway{margin-top:16px;padding:15px 17px;border-radius:14px;border:1px solid rgba(251,191,36,.3);background:rgba(251,191,36,.07);color:#f3e7c4;font-size:14.5px}
+.chartcard svg{width:100%;height:auto;display:block}
+
+/* ---------- roles ---------- */
+.rgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.rcard{background:#fff;border:1px solid var(--lline);border-radius:18px;padding:22px;display:flex;flex-direction:column;box-shadow:0 10px 30px rgba(15,23,42,.05)}
+.ricon{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(135deg,#ccfbf1,#99f6e4);margin-bottom:14px}
+.rcard h3{font-family:var(--hfont);font-size:19px;margin:0 0 4px;letter-spacing:-.01em}
+.rcard .q{color:#0f766e;font-weight:600;font-size:14px;margin:0 0 10px}
+.rcard ul{margin:0 0 18px;padding-left:18px;color:var(--lmuted);font-size:14px}
+.rcard li{margin:5px 0}
+.rcard .btn{margin-top:auto;justify-content:center}
+
+/* ---------- methods ---------- */
+.mgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:34px;align-items:center;margin-bottom:46px}
+.stack{position:relative;height:360px;perspective:1100px}
+.plane{position:absolute;left:6%;width:58%;height:150px;border-radius:16px;transform:rotateX(58deg) rotateZ(-36deg);border:1px solid rgba(20,184,166,.55);box-shadow:0 30px 50px rgba(15,23,42,.18)}
+.plane.p1{top:178px;background:radial-gradient(circle,rgba(20,184,166,.55) 1.2px,transparent 1.6px) 0 0/14px 14px,linear-gradient(135deg,#ecfeff,#ccfbf1)}
+.plane.p2{top:122px;background:repeating-linear-gradient(45deg,rgba(15,118,110,.18) 0 6px,transparent 6px 14px),linear-gradient(135deg,#f0fdfa,#e0f2fe)}
+.plane.p3{top:66px;background:linear-gradient(90deg,rgba(253,141,60,.55),rgba(240,59,32,.5)),linear-gradient(135deg,#fff7ed,#ffedd5)}
+.plane.p4{top:10px;background:linear-gradient(90deg,#ffffb2,#fecc5c 30%,#fd8d3c 55%,#f03b20 80%,#bd0026);border-color:#bd0026;opacity:.95}
+.slab{position:absolute;right:0;font-size:13px;color:var(--lmuted);display:flex;align-items:center;gap:8px}
+.slab b{color:#0f172a;font-size:14px}
+.slab:before{content:"";width:34px;height:1px;background:#94a3b8}
+.cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.mcard{background:#fff;border:1px solid var(--lline);border-radius:16px;padding:22px}
+.mcard h3{font-family:var(--hfont);margin:0 0 10px;font-size:19px}
+.mcard p,.mcard li{color:var(--lmuted);font-size:14.5px}
+.mcard ul{padding-left:18px;margin:0}
+.valid{margin:28px 0;padding:24px 26px;border-radius:18px;background:linear-gradient(135deg,#0f172a,#0b2a2a);color:#e6fffb;display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:center}
+.valid .seal{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;background:rgba(45,212,191,.15);border:1px solid rgba(45,212,191,.5)}
+.valid h3{margin:0 0 6px;font-family:var(--hfont);font-size:21px}
+.valid p{margin:0;color:#bfe9e3;font-size:15px}
+.prevent{margin-top:28px;border-radius:18px;padding:26px;background:#fff;border:2px solid #14b8a6}
+.prevent h3{margin:0 0 4px;font-family:var(--hfont);font-size:22px;color:#0f766e}
+.pgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:16px}
+.pitem h4{margin:0 0 6px;font-size:15px}
+.sec.light .pitem a{color:#0f766e;font-weight:600}
+.pitem p{margin:0 0 6px;color:var(--lmuted);font-size:14px}
+.cite{margin-top:24px;background:#fff;border:1px solid var(--lline);border-radius:14px;padding:18px 20px;font-size:14px;color:var(--lmuted)}
+.cite code{font-family:ui-monospace,Menlo,monospace;font-size:13px;color:#0f172a}
+.dl{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+
+/* ---------- footer ---------- */
+footer{background:#050a14;border-top:1px solid var(--line);padding:46px 0;color:var(--muted);font-size:13.5px}
+footer .wrap{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:28px}
+footer h4{color:var(--ink);margin:0 0 10px;font-size:14px}
+footer a{color:#9fe8de;text-decoration:none}
+
+/* ---------- responsive ---------- */
+@media (max-width:1080px){
+  .statgrid{grid-template-columns:repeat(6,1fr)}
+  .stat{grid-column:span 2} .stat:nth-child(n+4){grid-column:span 3}
+  .explore{grid-template-columns:290px 1fr}
+  .prof,.tgrid,.mgrid{grid-template-columns:1fr}
+  .rgrid{grid-template-columns:1fr 1fr}
+  .pgrid{grid-template-columns:1fr 1fr}
+  .navlinks{display:none}
+  .coords{display:none}
+}
+@media (max-width:860px){
+  .explore{grid-template-columns:1fr}
+  .explore .mapbox{order:-1;min-height:500px}
+  .layers{display:grid;grid-template-columns:1fr 1fr}
+}
+@media (max-width:720px){
+  .stat,.stat:nth-child(n+4){grid-column:auto}
+  .statgrid,.facts,.cards3,.strats,.rgrid,.cols3,.pgrid,.kpis,.ctx{grid-template-columns:1fr}
+  footer .wrap{grid-template-columns:1fr}
+  .mapbox{min-height:520px}
+  .coords{display:none}
+  .sec{padding:72px 0}
+  .stack{height:300px}
+}
+@media print{.nav,.hero,.stats,#why,#explore,#priorities,#targeting,#use,#methods,footer{display:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ======================= NAV ======================= -->
+<nav class="nav" aria-label="Main">
+  <div class="wrap">
+    <a class="brand" href="#top" aria-label="Atlas home">
+      <svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c-2.3 0-4 1.8-4 4.1 0 1.7.9 3.5 2.1 5.3L5 19.8l2.7 1.8L12 15.1l4.3 6.5 2.7-1.8-5.1-8.2c1.2-1.8 2.1-3.6 2.1-5.3 0-2.3-1.7-4.1-4-4.1Zm0 2.3c1 0 1.7.8 1.7 1.9 0 1-.6 2.3-1.7 3.9-1.1-1.6-1.7-2.9-1.7-3.9 0-1.1.7-1.9 1.7-1.9Z" fill="#2dd4bf"/><path d="M12 4.5c1 0 1.7.8 1.7 1.9" stroke="#fff" stroke-width=".9" fill="none" opacity=".7"/></svg>
+      <span>Cervical Prevention Atlas<small>Geospatial intelligence · U.S.</small></span>
+    </a>
+    <div class="navlinks">
+      <a href="#why">Why it matters</a><a href="#explore">Explore the map</a><a href="#county">Your county</a>
+      <a href="#priorities">Priority counties</a><a href="#targeting">Targeting tool</a><a href="#use">Use the atlas</a><a href="#methods">Methods &amp; data</a>
+    </div>
+  </div>
+</nav>
+
+<!-- ======================= HERO ======================= -->
+<header class="hero" id="top">
+  <div class="wrap">
+    <div class="eyebrow"><span class="pulse"></span>Geospatial intelligence · <span id="hN">3,109</span> U.S. counties</div>
+    <h1>Every woman should be able to <em>prevent cervical cancer.</em> Not every county makes it possible.</h1>
+    <p class="lead">This atlas maps the barriers that stand between women and cervical cancer prevention: missed screening, no nearby OB/GYN, no insurance, and long distances. It shows where those barriers pile up, so health departments, funders and communities can act where it matters most.</p>
+    <div class="btns">
+      <a class="btn primary" href="#explore" data-go="search">Find my county</a>
+      <a class="btn" href="#explore">Explore the map</a>
+      <a class="btn" href="#targeting">Plan where to act</a>
+    </div>
+    <div class="roles">
+      <div class="lab">I'm with a…</div>
+      <div class="chips">
+        <button class="chip" data-role="state">State health department</button>
+        <button class="chip" data-role="county">County or local health department</button>
+        <button class="chip" data-role="funder">Funder or policymaker</button>
+        <button class="chip" data-role="community">Community or advocacy group</button>
+      </div>
+    </div>
+  </div>
+  <div class="coords" aria-hidden="true">CONUS · EPSG:4326<br/><b>24.5°N–49.4°N</b> · <b>124.8°W–66.9°W</b><br/>LAYERS: SAHIE · AHRF · TIGER · PLACES</div>
+</header>
+
+<div class="stats">
+  <div class="wrap">
+    <div class="statgrid">
+      <div class="stat"><div class="v t num" id="sN">–</div><div class="k">counties mapped across the contiguous U.S.</div></div>
+      <div class="stat"><div class="v h num" id="sBelow">–</div><div class="k">of counties fall short of the national screening goal</div></div>
+      <div class="stat"><div class="v a num" id="sNoob">–</div><div class="k">counties have no practicing OB/GYN</div></div>
+      <div class="stat"><div class="v h num" id="sDB">–</div><div class="k">"double-burden" counties: low screening <i>and</i> poor access</div></div>
+      <div class="stat"><div class="v t num" id="sDBW">–</div><div class="k">women live in those double-burden counties</div></div>
+    </div>
+    <p class="finding" id="finding">Loading the atlas…</p>
+  </div>
+</div>
+
+<!-- ======================= 01 WHY ======================= -->
+<section class="sec light" id="why">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">01 · Why it matters</div>
+      <h2>One of the most preventable cancers, still taking thousands of lives</h2>
+      <p>About <b>13,100</b> women in the United States are diagnosed with cervical cancer each year, and about <b>4,200</b> die from it. Nearly all of these cases are preventable. Whether prevention reaches a woman depends heavily on where she lives.</p>
+    </div>
+    <div class="facts">
+      <div class="fact"><div class="v num">~13,100</div><div class="k">new cervical cancer diagnoses per year (recent annual average, NCI)</div></div>
+      <div class="fact"><div class="v num">~4,200</div><div class="k">deaths from cervical cancer per year (recent annual average, NCI)</div></div>
+      <div class="fact"><div class="v num" id="fBelow">–</div><div class="k">of contiguous U.S. counties are below the Healthy People 2030 screening goal of 84.3%</div></div>
+    </div>
+    <div class="cards3">
+      <article class="pcard">
+        <div class="pimg"><img loading="lazy" onerror="this.style.display='none'" src="https://images.unsplash.com/photo-1716833322949-0387103d8015?auto=format&fit=crop&w=1000&q=70" alt="Microscope image of stratified squamous epithelium, the layered tissue that lines the cervix"/><span class="tag">Where it begins</span></div>
+        <div class="pbody"><h3>It starts in the lining of the cervix</h3>
+          <p>Cervical cancer develops in the cells lining the cervix, almost always after a long-lasting infection with high-risk human papillomavirus (HPV). Abnormal changes usually take years to become cancer, which is exactly why regular screening can catch them in time.</p>
+          <div class="credit">Stratified squamous epithelium. Photo: Bioscience Image Library by Fayette Reynolds / Unsplash</div></div>
+      </article>
+      <article class="pcard">
+        <div class="pimg"><img loading="lazy" onerror="this.style.display='none'" src="https://images.unsplash.com/photo-1578308175085-444a1fbea0fe?auto=format&fit=crop&w=1000&q=70" alt="A health worker holding a syringe and a vaccine vial"/><span class="tag">Prevention works</span></div>
+        <div class="pbody"><h3>A vaccine and a screening test can stop it</h3>
+          <p>The HPV vaccine prevents the infections that cause most cervical cancers, and screening finds precancer early enough to treat. Together they make cervical cancer one of the few cancers that could be eliminated as a public health problem.</p>
+          <div class="credit">Photo: CDC / Unsplash</div></div>
+      </article>
+      <article class="pcard">
+        <div class="pimg"><img loading="lazy" onerror="this.style.display='none'" src="https://images.unsplash.com/photo-1524077410193-2f667f9ab09a?auto=format&fit=crop&w=1000&q=70" alt="An empty two-lane rural road lined with utility poles"/><span class="tag">Access decides</span></div>
+        <div class="pbody"><h3>But only if prevention can reach her</h3>
+          <p>When the nearest OB/GYN is an hour away, when a woman has no insurance, or when her county simply has fewer services, prevention that works on paper never arrives. These structural barriers are what this atlas measures.</p>
+          <div class="credit">Photo: Jake Blucker / Unsplash</div></div>
+      </article>
+    </div>
+    <div class="ribbonline">
+      <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c-2.3 0-4 1.8-4 4.1 0 1.7.9 3.5 2.1 5.3L5 19.8l2.7 1.8L12 15.1l4.3 6.5 2.7-1.8-5.1-8.2c1.2-1.8 2.1-3.6 2.1-5.3 0-2.3-1.7-4.1-4-4.1Zm0 2.3c1 0 1.7.8 1.7 1.9 0 1-.6 2.3-1.7 3.9-1.1-1.6-1.7-2.9-1.7-3.9 0-1.1.7-1.9 1.7-1.9Z" fill="#14b8a6"/></svg>
+      Teal and white is the color of cervical cancer awareness. Incidence and mortality figures: NCI State Cancer Profiles.
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 02 EXPLORE ======================= -->
+<section class="sec dark" id="explore">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">02 · Explore the map</div>
+      <h2>Where are the barriers to prevention highest?</h2>
+      <p>Every contiguous U.S. county, scored from public data. Search for a place, pick a state, choose what to map, and hover or click any county to learn more.</p>
+    </div>
+    <div class="explore">
+      <aside class="panel">
+        <div class="plab">Find a county</div>
+        <div class="search">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9db0c9" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+          <input id="q" type="text" placeholder="Type a county name, e.g. Starr" autocomplete="off" aria-label="Search for a county"/>
+          <div class="results" id="qres" role="listbox"></div>
+        </div>
+        <div class="plab" style="margin-top:18px">Focus on a state</div>
+        <select id="stSel" class="sel" aria-label="Choose a state"><option value="">All contiguous states</option></select>
+        <div class="plab" style="margin-top:18px">What to map</div>
+        <div class="layers" id="layerBtns"></div>
+        <div class="layernote" id="layerNote"></div>
+        <div class="hint">Tip: hover for a quick read, click for the full county profile.</div>
+      </aside>
+      <div class="mapbox">
+        <div id="map" role="region" aria-label="County map"></div>
+        <div class="mapnote" id="mapnote"><span id="mapnoteTxt"></span><button id="clearT">Clear</button></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 03 COUNTY ======================= -->
+<section class="sec dark" id="county" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">03 · Your county</div>
+      <h2>What women face in a specific place</h2>
+      <p>A plain-language profile of any county, compared with its state and the nation. Share the link or print a one-page brief.</p>
+    </div>
+    <div id="profile"></div>
+  </div>
+</section>
+
+<!-- ======================= 04 PRIORITIES ======================= -->
+<section class="sec light" id="priorities">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">04 · Priority counties</div>
+      <h2>Which counties should come first?</h2>
+      <p>Counties ranked by combined priority, an equal blend of the screening shortfall and the barrier to care. Filter by state, show only double-burden counties, sort any column, and download the list for planning.</p>
+    </div>
+    <div class="tctl">
+      <select id="tSt" class="sel" aria-label="Filter by state"><option value="">All states</option></select>
+      <input type="text" id="tQ" placeholder="Filter by county name" aria-label="Filter by county name"/>
+      <label class="tog"><input type="checkbox" id="tDB"/> Double-burden only</label>
+      <label class="tog"><input type="checkbox" id="tNoob"/> No local OB/GYN</label>
+      <span style="margin-left:auto"></span>
+      <button class="btn l sm" id="tCSV">Download this list (CSV)</button>
+    </div>
+    <div class="tblwrap"><table class="pt" id="pt"><thead></thead><tbody></tbody></table></div>
+    <div class="tfoot"><span class="muted" id="tCount"></span><button class="btn lo sm" id="tMore">Show 25 more</button></div>
+  </div>
+</section>
+
+<!-- ======================= 05 TARGETING ======================= -->
+<section class="sec dark" id="targeting">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">05 · Targeting tool</div>
+      <h2>If you could reach only some counties, which should they be?</h2>
+      <p>Choose a strategy and an outreach budget. The tool reports how many women below the screening goal each choice would reach, and how much of the effort goes to the hardest-to-serve places.</p>
+    </div>
+    <div class="strats" id="strats"></div>
+    <div class="tgrid">
+      <div class="card">
+        <div class="bud"><span class="plab" style="margin:0">Outreach budget</span><b class="num" id="budLbl">20%</b></div>
+        <div class="slider"><input type="range" id="bud" min="5" max="50" step="5" value="20" aria-label="Share of counties reached"/></div>
+        <div class="hint" id="budSub"></div>
+        <div class="kpis">
+          <div class="kpi"><div class="v num" id="kW">–</div><div class="k">women below the screening goal reached</div></div>
+          <div class="kpi"><div class="v num" id="kS">–</div><div class="k">share of all such women nationally</div></div>
+          <div class="kpi"><div class="v num" id="kDB">–</div><div class="k">double-burden counties included</div></div>
+          <div class="kpi"><div class="v num" id="kAcc">–</div><div class="k">typical barrier level in targeted counties</div></div>
+        </div>
+        <div class="takeaway" id="takeaway"></div>
+        <div class="acts" style="margin-top:16px">
+          <button class="btn primary sm" id="showT">Show these counties on the map</button>
+          <button class="btn sm" id="dlT">Download the list (CSV)</button>
+        </div>
+      </div>
+      <div class="card chartcard">
+        <div class="plab" style="margin-top:0">Share of under-screened women reached, by budget</div>
+        <div id="chart"></div>
+        <p class="hint">Reach is estimated from county screening coverage and the number of women aged roughly 21–65. Budgets are shares of the 3,109 contiguous counties. These are planning estimates, not predictions of impact.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 06 USE ======================= -->
+<section class="sec light" id="use">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">06 · Use the atlas</div>
+      <h2>Built for the people who decide where prevention goes</h2>
+      <p>Pick your role to jump straight to the output that fits a decision you already make.</p>
+    </div>
+    <div class="rgrid">
+      <div class="rcard"><div class="ricon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><path d="M3 21h18M5 21V9l7-5 7 5v12M9 21v-6h6v6"/></svg></div>
+        <h3>State health departments</h3><p class="q">Rank counties for the annual plan</p>
+        <ul><li>Filter the priority list to your state</li><li>See double-burden counties and OB/GYN gaps</li><li>Download a ranked list for the operational plan</li></ul>
+        <button class="btn l" data-role="state">Open my state's list</button></div>
+      <div class="rcard"><div class="ricon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/></svg></div>
+        <h3>County and local health departments</h3><p class="q">Understand your county and justify resources</p>
+        <ul><li>See what drives your county's barrier level</li><li>Compare with your state and the nation</li><li>Print a one-page brief for your board</li></ul>
+        <button class="btn l" data-role="county">Find my county</button></div>
+      <div class="rcard"><div class="ricon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><path d="M4 19V5M4 19h16M8 15l3-4 3 2 5-6"/></svg></div>
+        <h3>Funders and policymakers</h3><p class="q">Choose a strategy and see who it reaches</p>
+        <ul><li>Compare equity-first, balanced and reach-first targeting</li><li>See women reached and access deserts covered</li><li>Export the selected counties for a proposal</li></ul>
+        <button class="btn l" data-role="funder">Open the targeting tool</button></div>
+      <div class="rcard"><div class="ricon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0f766e" stroke-width="2"><circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M14 20c0-2.5 1.4-4.5 3-4.5s4 2 4 4.5"/></svg></div>
+        <h3>Community and advocacy groups</h3><p class="q">Tell your community's story with evidence</p>
+        <ul><li>Share a direct link to your county's profile</li><li>Use plain-language findings in outreach</li><li>Point women to free or low-cost screening</li></ul>
+        <button class="btn l" data-role="community">Share my county</button></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= 07 METHODS ======================= -->
+<section class="sec light" id="methods" style="padding-top:20px">
+  <div class="wrap">
+    <div class="sh">
+      <div class="sn">07 · Methods &amp; data</div>
+      <h2>From public data layers to a county-level picture</h2>
+      <p>The atlas fuses four national data layers into one county-by-county measure of how hard it is for women to get cervical cancer prevention.</p>
+    </div>
+    <div class="mgrid">
+      <div class="stack" aria-hidden="true">
+        <div class="plane p1"></div><div class="plane p2"></div><div class="plane p3"></div><div class="plane p4"></div>
+        <div class="slab" style="top:210px"><span><b>Geographic isolation</b><br/>Census TIGER/Line geometry, population</span></div>
+        <div class="slab" style="top:150px"><span><b>OB/GYN supply</b><br/>HRSA Area Health Resources File</span></div>
+        <div class="slab" style="top:92px"><span><b>Insurance coverage</b><br/>Census SAHIE</span></div>
+        <div class="slab" style="top:20px"><span><b>Access index and priority</b><br/>+ CDC PLACES screening</span></div>
+      </div>
+      <div>
+        <div class="mcard"><h3>How the score is built</h3>
+          <p>Three structural domains, insurance coverage, OB/GYN supply per 10,000 women, and geographic isolation (population density and distance to a large population center), are standardized and averaged with equal, pre-specified weights into a <b>structural access index</b>, expressed as a percentile from 0 to 100. The <b>screening shortfall</b> is how far a county falls below the Healthy People 2030 goal that 84.3% of women are up to date. The <b>combined priority</b> is an equal blend of the two. <b>Double-burden</b> counties are in the worst fifth on both.</p>
+          <p>Race was never used as an input, and cancer outcomes were never used to build the score.</p></div>
+      </div>
+    </div>
+
+    <div class="valid">
+      <div class="seal"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="2.2"><path d="M20 6 9 17l-5-5"/></svg></div>
+      <div><h3>Checked against real outcomes</h3>
+        <p>In a pre-registered analysis, counties with higher access barriers had higher cervical cancer incidence (Spearman ρ = 0.58) and mortality (ρ = 0.49), and the index added predictive value for mortality beyond the CDC Social Vulnerability Index in states held out of the model. Double-burden counties had about 70% higher cervical cancer incidence than other counties (14.4 vs 8.3 per 100,000).</p></div>
+    </div>
+
+    <div class="cols3">
+      <div class="mcard"><h3>How to read it</h3>
+        <ul><li>Scores are relative. A barrier of 80 means higher barriers than about 80% of counties, not an 80% chance of anything.</li>
+        <li>The atlas describes places, not individual women, and is not a measure of anyone's cancer risk.</li>
+        <li>Levels (Low to Severe) are fifths of the national distribution.</li></ul></div>
+      <div class="mcard"><h3>Limitations</h3>
+        <ul><li>Screening estimates are model-based (CDC PLACES, 2020 survey data).</li>
+        <li>County HPV vaccination data are not available, so vaccination is not in the score.</li>
+        <li>Cancer rates are suppressed for many small counties; Kansas, Minnesota and Virginia do not publish them.</li>
+        <li>Travel time to care is approximated by geographic isolation.</li>
+        <li>Alaska and Hawaii are not mapped.</li></ul></div>
+      <div class="mcard"><h3>Data sources</h3>
+        <ul><li>U.S. Census Bureau, Small Area Health Insurance Estimates (SAHIE)</li>
+        <li>HRSA, Area Health Resources Files, 2024–2025</li>
+        <li>U.S. Census Bureau, TIGER/Line 2023 counties</li>
+        <li>CDC PLACES, cervical cancer screening</li>
+        <li>CDC/ATSDR Social Vulnerability Index 2022 (comparison only)</li>
+        <li>NCI State Cancer Profiles, incidence and mortality (context only)</li></ul></div>
+    </div>
+
+    <div class="prevent" id="help">
+      <h3>Cervical cancer can be prevented</h3>
+      <p class="muted" style="margin:0">This atlas describes counties, not individuals, and is not medical advice. If you are a woman looking for care, these resources can help.</p>
+      <div class="pgrid">
+        <div class="pitem"><h4>HPV vaccination</h4><p>CDC recommends 2 doses at ages 11–12; vaccination can start at age 9, with catch-up through age 26.</p><a href="https://www.cdc.gov/hpv/vaccines/index.html" target="_blank" rel="noopener">CDC: HPV vaccination</a></div>
+        <div class="pitem"><h4>Regular screening</h4><p>Screening is recommended for most women starting in their twenties. Ask a health care provider which test and schedule are right for you.</p><a href="https://www.cdc.gov/cervical-cancer/screening/index.html" target="_blank" rel="noopener">CDC: Cervical cancer screening</a></div>
+        <div class="pitem"><h4>Free or low-cost screening</h4><p>CDC's National Breast and Cervical Cancer Early Detection Program serves women with low incomes and limited insurance.</p><a href="https://www.cdc.gov/breast-cervical-cancer-screening/about/screenings.html" target="_blank" rel="noopener">Find a screening program</a></div>
+        <div class="pitem"><h4>Find a health center</h4><p>Federally funded health centers provide care on a sliding fee scale, whatever your insurance status.</p><a href="https://findahealthcenter.hrsa.gov/" target="_blank" rel="noopener">HRSA: Find a health center</a></div>
+      </div>
+    </div>
+
+    <div class="cite">
+      <b style="color:#0f172a">Download the data.</b> County-level results for use in QGIS, R, Python or Excel.
+      <div class="dl"><a class="btn l sm" href="counties.geojson" download>GeoJSON (boundaries + scores)</a><button class="btn lo sm" id="dlAll">CSV (scores only)</button></div>
+      <p style="margin:18px 0 0"><b style="color:#0f172a">Cite as:</b> <code>Oladeji, T. A., &amp; Cuadros, D. F. (2026). U.S. Cervical Cancer Prevention Access Atlas [interactive tool]. Digital Epidemiology Laboratory, University of Cincinnati. https://tadedoyinsola.github.io/cervical-access-atlas/</code></p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div><h4>U.S. Cervical Cancer Prevention Access Atlas</h4>
+      An independent academic project by Tolulope A. Oladeji and Diego F. Cuadros, Digital Epidemiology Laboratory, University of Cincinnati. Not medical advice.<br/><br/>
+      Also see the <a href="https://tadedoyinsola.github.io/nigeria-mvi-atlas/">Nigeria Maternal Vulnerability Atlas</a>.</div>
+    <div><h4>Project</h4><a href="https://github.com/tadedoyinsola/cervical-access-atlas">Source code and data on GitHub</a><br/><a href="#methods">Methods and limitations</a><br/><a href="#help">Find screening and vaccination</a></div>
+    <div><h4>Photo credits</h4>Via Unsplash: NASA (hero), Bioscience Image Library by Fayette Reynolds, CDC, Jake Blucker.</div>
+  </div>
+</footer>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+/* ---------------- configuration ---------------- */
+const RAMP=["#ffffb2","#fecc5c","#fd8d3c","#f03b20","#bd0026"];
+const NODATA="#3a4a63", BASE="#22324d", GOAL=84.3;
+const q5=v=>v==null?-1:v<20?0:v<40?1:v<60?2:v<80?3:4;
+const LAYERS={
+  access:{name:"Barrier to prevention care",sub:"Access index, 0–100",key:"access",cls:q5,
+    labels:["Low","Moderate","Elevated","High","Severe"],ranges:["0–20","20–40","40–60","60–80","80–100"],
+    note:"Combines insurance coverage, OB/GYN supply and geographic isolation. A score of 80 means a higher barrier than about 80% of counties."},
+  gap:{name:"Screening shortfall",sub:"Points below the 84.3% goal",key:"gap",
+    cls:v=>v==null?-1:v<=0?0:v<2?1:v<4?2:v<6?3:4,
+    labels:["Meets goal","Slightly below","Below","Well below","Far below"],ranges:["0","under 2 pts","2–4 pts","4–6 pts","6+ pts"],
+    note:"How far the share of women up to date on cervical screening falls below the Healthy People 2030 goal of 84.3%."},
+  priority:{name:"Combined priority",sub:"Screening gap + access barrier",key:"priority",cls:q5,
+    labels:["Lower","Low–moderate","Moderate","High","Highest"],ranges:["0–20","20–40","40–60","60–80","80–100"],
+    note:"An equal blend of the screening shortfall and the barrier to care. Highest-priority counties need attention on both."},
+  db:{name:"Double-burden counties",sub:"Worst fifth on both",cat:true,
+    note:"Counties in the worst fifth of the country for both the screening shortfall and the barrier to care."},
+  noob:{name:"No local OB/GYN",sub:"Counties with none practicing",cat:true,
+    note:"Counties with no OB/GYN physician in patient care (HRSA Area Health Resources File). Women there must travel for specialist care."}
+};
+const STRATS={
+  equity:{label:"Equity first",color:"#f03b20",desc:"Start with the highest combined priority: the hardest-to-serve, most neglected counties."},
+  balanced:{label:"Balanced",color:"#2dd4bf",rec:true,desc:"Blend the number of under-screened women with the barrier to care, so effort reaches many women without leaving access deserts behind."},
+  reach:{label:"Reach the most women",color:"#fbbf24",desc:"Start where the most women are below the screening goal, mostly larger and better-served counties."}
+};
+/* ---------------- state ---------------- */
+let META,FEATS,DATA,BY={},N=0,TOTADDR=0,ORDER={},GEO,MAP,SEL=null,CUR="access",STATE="",SHOW_T=false,TSET=new Set(),STRAT="balanced";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const fmt=(v,d=0)=>v==null||isNaN(v)?"n/a":Number(v).toLocaleString(undefined,{maximumFractionDigits:d,minimumFractionDigits:d});
+const big=v=>v>=1e6?(v/1e6).toFixed(1)+"M":v>=1e3?Math.round(v/1e3).toLocaleString()+"K":String(Math.round(v));
+const pct=(a,b)=>Math.round(100*a/b)+"%";
+const median=a=>{const s=a.filter(x=>x!=null).sort((x,y)=>x-y);if(!s.length)return null;const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------------- load ---------------- */
+function load(){
+  if(window.__COUNTIES) return Promise.resolve([window.__COUNTIES,window.__STATES||null]);
+  return Promise.all([fetch("counties.geojson").then(r=>r.json()),fetch("states.geojson").then(r=>r.json()).catch(()=>null)]);
+}
+load().then(([fc,sf])=>init(fc,sf)).catch(e=>{$("#finding").textContent="The map data could not be loaded. If you opened this file directly, run a local web server (see README).";console.error(e);});
+
+function init(fc,sf){
+  META=fc.meta; FEATS=fc.features; DATA=FEATS.map(f=>f.properties); N=DATA.length;
+  DATA.forEach(p=>BY[p.fips]=p);
+  TOTADDR=DATA.reduce((s,p)=>s+(p.addr||0),0);
+  const ar=[...DATA].sort((a,b)=>(a.addr||0)-(b.addr||0)); ar.forEach((p,i)=>p._ap=100*(i+1)/N);
+  ORDER.equity=[...DATA].sort((a,b)=>(b.priority??-1)-(a.priority??-1));
+  ORDER.balanced=[...DATA].sort((a,b)=>(.65*b._ap+.35*(b.access??0))-(.65*a._ap+.35*(a.access??0)));
+  ORDER.reach=[...DATA].sort((a,b)=>(b.addr||0)-(a.addr||0));
+  fillHero(); buildStateSelects(); buildLayerButtons(); buildMap(sf); buildSearch($("#q"),$("#qres"),f=>selectCounty(f,{zoom:true,scroll:true}));
+  renderProfile(null); buildTable(); buildStrategies(); updateTarget(); wireRoles();
+  const m=location.hash.match(/c=(\d{5})/); if(m&&BY[m[1]]) setTimeout(()=>selectCounty(m[1],{zoom:true,scroll:true}),300);
+}
+
+/* ---------------- hero ---------------- */
+function fillHero(){
+  const u=META.us;
+  $("#hN").textContent=fmt(N); $("#sN").textContent=fmt(N);
+  $("#sBelow").textContent=pct(u.below,N); $("#fBelow").textContent=pct(u.below,N);
+  $("#sNoob").textContent=fmt(u.noob); $("#sDB").textContent=fmt(u.db); $("#sDBW").textContent=big(u.db_women);
+  const oneIn=Math.round(N/u.db);
+  $("#finding").innerHTML=`In about <b>1 in ${oneIn}</b> contiguous U.S. counties, women face <b>both</b> low cervical screening and the steepest barriers to care. These <b>${fmt(u.db)} double-burden counties</b>, home to about <b>${big(u.db_women)} women</b>, are concentrated in Texas, the rural South and the Mountain West.`;
+}
+
+/* ---------------- selects ---------------- */
+function buildStateSelects(){
+  const sts=Object.entries(META.states).sort((a,b)=>a[1].name.localeCompare(b[1].name));
+  for(const id of ["#stSel","#tSt"]){const s=$(id);sts.forEach(([ab,o])=>{const op=document.createElement("option");op.value=ab;op.textContent=o.name;s.appendChild(op);});}
+  $("#stSel").addEventListener("change",e=>setState(e.target.value,true));
+  $("#tSt").addEventListener("change",e=>setState(e.target.value,false));
+}
+function setState(ab,zoom){
+  STATE=ab; $("#stSel").value=ab; $("#tSt").value=ab; TSHOWN=25;
+  if(GEO) GEO.setStyle(style);
+  if(zoom&&MAP){ if(ab){const b=L.latLngBounds([]);GEO.eachLayer(l=>{if(l.feature.properties.st===ab)b.extend(l.getBounds());});MAP.fitBounds(b,{padding:[30,30]});} else MAP.fitBounds(CONUS,{padding:[10,10]}); }
+  buildTable();
+}
+
+/* ---------------- layers ---------------- */
+function buildLayerButtons(){
+  const box=$("#layerBtns");
+  Object.entries(LAYERS).forEach(([k,o])=>{
+    const b=document.createElement("button");b.className="lbtn"+(k===CUR?" on":"");b.dataset.k=k;
+    const rmp=o.cat?(k==="db"?`linear-gradient(90deg,${BASE} 50%,#bd0026 50%)`:`linear-gradient(90deg,${BASE} 50%,#f03b20 50%)`):`linear-gradient(90deg,${RAMP.join(",")})`;
+    b.innerHTML=`<span class="rmp" style="background:${rmp}"></span><span><b>${o.name}</b><span>${o.sub}</span></span>`;
+    b.onclick=()=>{CUR=k;$$(".lbtn").forEach(x=>x.classList.toggle("on",x===b));GEO.setStyle(style);legend();$("#layerNote").textContent=o.note;};
+    box.appendChild(b);
+  });
+  $("#layerNote").textContent=LAYERS[CUR].note;
+}
+function fillFor(p){
+  if(CUR==="db") return p.db?"#bd0026":BASE;
+  if(CUR==="noob") return p.obn==null?NODATA:(p.obn===0?"#f03b20":BASE);
+  const L_=LAYERS[CUR],c=L_.cls(p[L_.key]); return c<0?NODATA:RAMP[c];
+}
+function style(f){
+  const p=f.properties; let color="rgba(6,12,24,.6)",weight=.35;
+  const dim=STATE&&p.st!==STATE;
+  if(SHOW_T&&TSET.has(p.fips)){color="#2dd4bf";weight=1.4;}
+  if(p.fips===SEL){color="#ffffff";weight=2.8;}
+  return {fillColor:fillFor(p),fillOpacity:dim?.18:.94,color,weight};
+}
+function levelOf(layer,v){const o=LAYERS[layer],c=o.cls(v);return c<0?{t:"No data",c:NODATA,i:-1}:{t:o.labels[c],c:RAMP[c],i:c};}
+
+/* ---------------- map ---------------- */
+const CONUS=[[24.4,-125],[49.5,-66.8]];
+let LEG;
+function buildMap(sf){
+  MAP=L.map("map",{preferCanvas:true,zoomSnap:.25,minZoom:3,maxZoom:10,attributionControl:true,scrollWheelZoom:false,worldCopyJump:false});
+  MAP.attributionControl.setPrefix(false);
+  MAP.attributionControl.addAttribution("Data: Census SAHIE &amp; TIGER, HRSA AHRF, CDC PLACES, NCI State Cancer Profiles");
+  MAP.on("focus",()=>MAP.scrollWheelZoom.enable());
+  MAP.fitBounds(CONUS,{padding:[10,10]});
+  GEO=L.geoJSON({type:"FeatureCollection",features:FEATS},{style,onEachFeature:(f,l)=>{
+    const p=f.properties;
+    l.bindTooltip(()=>tip(p),{sticky:true,className:"tt",direction:"top",offset:[0,-8]});
+    l.on("mouseover",()=>{l.setStyle({weight:2,color:"#ffffff"});});
+    l.on("mouseout",()=>{GEO.resetStyle(l);});
+    l.on("click",()=>selectCounty(p.fips,{zoom:false,scroll:false,openBelow:true}));
+  }}).addTo(MAP);
+  if(sf){ MAP.createPane("states");MAP.getPane("states").style.zIndex=450;MAP.getPane("states").style.pointerEvents="none";
+    L.geoJSON(sf,{pane:"states",interactive:false,style:{color:"rgba(255,255,255,.55)",weight:.9,fill:false}}).addTo(MAP); }
+  LEG=L.control({position:"bottomleft"});LEG.onAdd=()=>{const d=L.DomUtil.create("div","legend");d.id="legend";return d;};LEG.addTo(MAP);legend();
+  setTimeout(()=>MAP.invalidateSize(),200);
+}
+function tip(p){
+  let line;
+  if(CUR==="db") line=p.db?"Double-burden county":"Not double-burden";
+  else if(CUR==="noob") line=p.obn==null?"OB/GYN supply: no data":(p.obn===0?"No practicing OB/GYN":`${p.obn} OB/GYN${p.obn>1?"s":""} in patient care`);
+  else {const lv=levelOf(CUR,p[LAYERS[CUR].key]);line=`${LAYERS[CUR].name}: <b>${lv.t}</b>`;}
+  return `<b>${esc(p.name)}, ${p.st}</b><br/>${line}<br/><span style="color:#9db0c9">Click for full profile</span>`;
+}
+function legend(){
+  const el=document.getElementById("legend"); if(!el) return; const o=LAYERS[CUR];
+  if(o.cat){
+    const rows=CUR==="db"?[["#bd0026","Double-burden county"],[BASE,"Other county"]]:[["#f03b20","No practicing OB/GYN"],[BASE,"At least one OB/GYN"],[NODATA,"No data"]];
+    el.innerHTML=`<h4>${o.name}</h4>`+rows.map(([c,t])=>`<div class="lrow"><span class="sw" style="background:${c}"></span>${t}</div>`).join("");
+  } else {
+    el.innerHTML=`<h4>${o.name}</h4>`+o.labels.map((t,i)=>`<div class="lrow"><span class="sw" style="background:${RAMP[i]}"></span>${t}<small>${o.ranges[i]}</small></div>`).join("")+
+      `<div class="lrow"><span class="sw" style="background:${NODATA}"></span>No data</div>`;
+  }
+}
+
+/* ---------------- search ---------------- */
+const SIDX=()=>DATA.map(p=>({f:p.fips,t:(p.name+" "+p.st+" "+p.sn).toLowerCase(),n:p.name.toLowerCase(),label:`${p.name}<small>, ${p.sn}</small>`}));
+let _SIDX=null;
+function buildSearch(inp,box,onPick){
+  let hits=[],on=0;
+  const render=()=>{box.innerHTML=hits.map((h,i)=>`<div role="option" class="${i===on?"on":""}" data-f="${h.f}">${h.label}</div>`).join("");box.style.display=hits.length?"block":"none";};
+  inp.addEventListener("input",()=>{_SIDX=_SIDX||SIDX();const v=inp.value.trim().toLowerCase();if(v.length<2){hits=[];render();return;}
+    const a=_SIDX.filter(x=>x.n.startsWith(v)),b=_SIDX.filter(x=>!x.n.startsWith(v)&&x.t.includes(v));hits=[...a,...b].slice(0,8);on=0;render();});
+  inp.addEventListener("keydown",e=>{if(!hits.length)return;if(e.key==="ArrowDown"){on=Math.min(on+1,hits.length-1);render();e.preventDefault();}
+    else if(e.key==="ArrowUp"){on=Math.max(on-1,0);render();e.preventDefault();}else if(e.key==="Enter"){pick(hits[on].f);e.preventDefault();}else if(e.key==="Escape"){hits=[];render();}});
+  box.addEventListener("mousedown",e=>{const d=e.target.closest("[data-f]");if(d){pick(d.dataset.f);e.preventDefault();}});
+  inp.addEventListener("blur",()=>setTimeout(()=>{box.style.display="none";},150));
+  function pick(f){const p=BY[f];inp.value=`${p.name}, ${p.st}`;hits=[];render();onPick(f);}
+}
+
+/* ---------------- selection + profile ---------------- */
+function selectCounty(f,o={}){
+  SEL=f; const p=BY[f]; if(!p) return;
+  GEO.setStyle(style);
+  if(o.zoom){GEO.eachLayer(l=>{if(l.feature.properties.fips===f) MAP.fitBounds(l.getBounds(),{maxZoom:7,padding:[60,60]});});}
+  history.replaceState(null,"","#c="+f);
+  renderProfile(p);
+  if(o.scroll) setTimeout(()=>$("#explore").scrollIntoView({behavior:"smooth"}),50);
+  if(o.openBelow) $("#county").scrollIntoView({behavior:"smooth"});
+}
+function bars(m){
+  const row=(lab,v,col)=>{const w=v==null?0:Math.max(2,Math.min(100,100*v/m.max));
+    return `<div class="bar"><span class="lb">${lab}</span><span class="tr"><span class="fl" style="display:block;width:${w}%;background:${col}"></span>${m.goal?`<span class="goal" style="left:${100*m.goal/m.max}%"></span>`:""}</span><span class="vv num">${v==null?"n/a":fmt(v,m.d)+m.u}</span></div>`;};
+  return `<div class="metric"><div class="mh"><b>${m.label}</b><span>${m.hint}</span></div>${row("County",m.c,"#2dd4bf")}${row("State",m.s,"#7c8fb0")}${row("U.S.",m.us,"#4a5b78")}</div>`;
+}
+const lblX=v=>v>88?"left:auto;right:-2px;transform:none":v<12?"left:-2px;transform:none":"";
+function renderProfile(p){
+  const el=$("#profile");
+  if(!p){const ex=ORDER.equity[0];
+    el.innerHTML=`<div class="card empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="#2dd4bf" stroke-width="1.6" style="margin-bottom:10px"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/></svg>
+      <div style="font-size:18px;color:#e7eef8;margin-bottom:6px">Choose a county to see its profile</div>
+      <div>Search above, or click any county on the map.</div>
+      <div style="margin-top:16px"><button class="btn sm" id="tryEx">Try ${esc(ex.name)}, ${ex.st} (highest priority)</button></div></div>`;
+    $("#tryEx").onclick=()=>selectCounty(ex.fips,{zoom:true,scroll:false,openBelow:true}); return; }
+  const s=META.states[p.st]||{}, u=META.us, la=levelOf("access",p.access), lp=levelOf("priority",p.priority), lg=levelOf("gap",p.gap);
+  const means=[];
+  if(p.screen!=null){ if(p.screen<GOAL) means.push(`About <b>${Math.round(p.screen)} in 100</b> women here are up to date on cervical screening, below the national goal of 84.3 in 100.`); else means.push(`About <b>${Math.round(p.screen)} in 100</b> women here are up to date on cervical screening, meeting the national goal.`);}
+  if(p.obn===0) means.push(`There is <b>no practicing OB/GYN</b> in the county, so women must travel elsewhere for specialist care.`);
+  else if(p.obgyn!=null&&u.obgyn&&p.obgyn<u.obgyn/2) means.push(`OB/GYN supply (${fmt(p.obgyn,1)} per 10,000 women) is <b>less than half</b> the national level.`);
+  if(p.unins!=null&&p.unins>u.unins*1.25) means.push(`<b>${fmt(p.unins,1)}%</b> of people under 65 are uninsured, well above the national ${fmt(u.unins,1)}%.`);
+  if(p.db) means.push(`This is one of <b>${fmt(u.db)} double-burden counties</b>, in the worst fifth of the country for both screening and access.`);
+  if(p.access!=null&&p.access<40&&p.gap!=null&&p.gap<2) means.push(`Barriers here are <b>lower than in most counties</b>; the priority is keeping coverage high.`);
+  const cmp=[
+    {label:"Women up to date on screening",hint:"higher is better · amber line = 84.3% goal",c:p.screen,s:s.screen,us:u.screen,max:100,u:"%",d:1,goal:GOAL},
+    {label:"Uninsured (under age 65)",hint:"lower is better",c:p.unins,s:s.unins,us:u.unins,max:Math.max(30,(p.unins||0)+2),u:"%",d:1},
+    {label:"OB/GYNs per 10,000 women",hint:"higher is better",c:p.obgyn,s:s.obgyn,us:u.obgyn,max:Math.max(8,(p.obgyn||0)*1.1),u:"",d:1}
+  ];
+  const incT=p.inc==null?`<b>–</b><small>Not published: too few cases to report reliably</small>`:`<b class="num">${fmt(p.inc,1)}</b><small>per 100,000 women, age-adjusted (U.S. ${u.inc})</small>`;
+  const morT=p.mort==null?`<b>–</b><small>Not published: too few deaths to report reliably</small>`:`<b class="num">${fmt(p.mort,1)}</b><small>per 100,000 women, age-adjusted (U.S. ${u.mort})</small>`;
+  el.innerHTML=`<div class="prof">
+   <div class="card">
+     <h3 class="cty">${esc(p.name)}</h3><div class="cst">${esc(p.sn)} · population ${fmt(p.pop)} · U.S. priority rank <b class="num">${fmt(p.prank)}</b> of ${fmt(N)}</div>
+     <div class="badges">
+       <span class="badge"><i style="background:${la.c}"></i>Barrier: ${la.t}</span>
+       <span class="badge"><i style="background:${lg.c}"></i>Screening: ${lg.t}</span>
+       <span class="badge"><i style="background:${lp.c}"></i>Priority: ${lp.t}</span>
+       ${p.db?`<span class="badge" style="border-color:#bd0026;color:#ffb4b4"><i style="background:#bd0026"></i>Double burden</span>`:""}
+       ${p.obn===0?`<span class="badge" style="border-color:#f03b20;color:#ffc2b3"><i style="background:#f03b20"></i>No local OB/GYN</span>`:""}
+     </div>
+     <p class="big">The barrier to prevention care here is <b>${la.t.toLowerCase()}</b>${p.access!=null?`: higher than about <b>${Math.round(p.access)}%</b> of U.S. counties`:""}.</p>
+     <div class="track" aria-hidden="true">
+       ${s.access!=null?`<span class="mk s" style="left:${s.access}%"><span style="${lblX(s.access)}">${esc(s.name||"State")} avg</span></span>`:""}
+       <span class="mk u" style="left:${u.access}%"><span style="${lblX(u.access)}">U.S. avg</span></span>
+       ${p.access!=null?`<span class="mk c" style="left:${p.access}%"><span style="${lblX(p.access)}">This county</span></span>`:""}
+     </div>
+     <div class="means"><h4>What this means</h4><ul>${means.map(m=>`<li>${m}</li>`).join("")||"<li>Data are limited for this county.</li>"}</ul></div>
+     <div class="acts">
+       <button class="btn primary sm" id="shareBtn">Copy share link</button>
+       <button class="btn sm" id="printBtn">Print county brief</button>
+       <a class="btn sm" href="#help">Find screening help</a>
+     </div>
+   </div>
+   <div class="card">
+     ${cmp.map(bars).join("")}
+     <div class="plab">Cervical cancer in this county (context only)</div>
+     <div class="ctx"><div><small>New diagnoses (yearly rate)</small>${incT}</div><div><small>Deaths (yearly rate)</small>${morT}</div></div>
+     <div class="cmp"><div class="plab">Compare with another county</div>
+       <div class="search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9db0c9" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+       <input id="q2" type="text" placeholder="Type a second county" autocomplete="off" aria-label="Compare with another county"/><div class="results" id="q2res"></div></div>
+       <div id="cmpOut"></div></div>
+   </div></div>`;
+  $("#shareBtn").onclick=()=>{const url=location.origin+location.pathname+"#c="+p.fips;
+    (navigator.clipboard?navigator.clipboard.writeText(url):Promise.reject()).then(()=>{$("#shareBtn").textContent="Link copied";setTimeout(()=>$("#shareBtn").textContent="Copy share link",1800);}).catch(()=>prompt("Copy this link:",url));};
+  $("#printBtn").onclick=()=>printBrief(p,means);
+  buildSearch($("#q2"),$("#q2res"),f=>renderCompare(p,BY[f]));
+}
+function renderCompare(a,b){
+  const rows=[["Barrier to care",x=>levelOf("access",x.access).t+(x.access!=null?` (${Math.round(x.access)})`:"")],["Screening shortfall",x=>levelOf("gap",x.gap).t],
+    ["Women up to date on screening",x=>x.screen==null?"n/a":fmt(x.screen,1)+"%"],["Uninsured (under 65)",x=>x.unins==null?"n/a":fmt(x.unins,1)+"%"],
+    ["OB/GYNs per 10,000 women",x=>x.obgyn==null?"n/a":fmt(x.obgyn,1)],["Combined priority",x=>levelOf("priority",x.priority).t],["U.S. priority rank",x=>fmt(x.prank)],["Double burden",x=>x.db?"Yes":"No"]];
+  $("#cmpOut").innerHTML=`<table class="cmptbl"><thead><tr><th></th><th>${esc(a.name)}, ${a.st}</th><th>${esc(b.name)}, ${b.st}</th></tr></thead><tbody>${rows.map(([l,f])=>`<tr><td>${l}</td><td>${f(a)}</td><td>${f(b)}</td></tr>`).join("")}</tbody></table>`;
+}
+function printBrief(p,means){
+  const u=META.us,s=META.states[p.st]||{},la=levelOf("access",p.access),lp=levelOf("priority",p.priority);
+  const w=window.open("","_blank"); if(!w) return;
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>${esc(p.name)}, ${p.st}: cervical cancer prevention brief</title>
+  <style>body{font-family:Inter,Arial,sans-serif;color:#0f172a;max-width:760px;margin:36px auto;padding:0 24px;line-height:1.5}h1{margin:0;font-size:28px}.s{color:#526178}
+  .k{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:20px 0}.k div{border:1px solid #e2e8f1;border-radius:10px;padding:12px}.k b{font-size:22px;display:block}
+  table{width:100%;border-collapse:collapse;margin:14px 0}td,th{border-bottom:1px solid #e2e8f1;padding:7px;text-align:right}td:first-child,th:first-child{text-align:left}.f{font-size:12px;color:#526178;margin-top:24px;border-top:1px solid #e2e8f1;padding-top:10px}</style></head><body>
+  <div class="s">U.S. Cervical Cancer Prevention Access Atlas · County brief</div><h1>${esc(p.name)}, ${esc(p.sn)}</h1>
+  <div class="k"><div><span class="s">Barrier to care</span><b>${la.t}</b>${p.access!=null?Math.round(p.access)+" / 100":""}</div><div><span class="s">Combined priority</span><b>${lp.t}</b>rank ${fmt(p.prank)} of ${fmt(N)}</div><div><span class="s">Double burden</span><b>${p.db?"Yes":"No"}</b>${p.obn===0?"no local OB/GYN":""}</div></div>
+  <h3>What this means</h3><ul>${means.map(m=>`<li>${m}</li>`).join("")}</ul>
+  <table><tr><th></th><th>County</th><th>${esc(s.name||"State")}</th><th>U.S.</th></tr>
+  <tr><td>Women up to date on screening</td><td>${p.screen==null?"n/a":fmt(p.screen,1)+"%"}</td><td>${fmt(s.screen,1)}%</td><td>${fmt(u.screen,1)}%</td></tr>
+  <tr><td>Uninsured (under 65)</td><td>${p.unins==null?"n/a":fmt(p.unins,1)+"%"}</td><td>${fmt(s.unins,1)}%</td><td>${fmt(u.unins,1)}%</td></tr>
+  <tr><td>OB/GYNs per 10,000 women</td><td>${p.obgyn==null?"n/a":fmt(p.obgyn,1)}</td><td>${fmt(s.obgyn,1)}</td><td>${fmt(u.obgyn,1)}</td></tr>
+  <tr><td>Cervical cancer incidence per 100,000</td><td>${p.inc==null?"not published":fmt(p.inc,1)}</td><td>–</td><td>${u.inc}</td></tr>
+  <tr><td>Cervical cancer mortality per 100,000</td><td>${p.mort==null?"not published":fmt(p.mort,1)}</td><td>–</td><td>${u.mort}</td></tr></table>
+  <h3>Where women can get help</h3><ul><li>HPV vaccination: cdc.gov/hpv/vaccines</li><li>Free or low-cost screening: cdc.gov/breast-cervical-cancer-screening</li><li>Health centers: findahealthcenter.hrsa.gov</li></ul>
+  <div class="f">Scores describe the county, not individual women, and are not medical advice. Data: Census SAHIE &amp; TIGER/Line, HRSA AHRF, CDC PLACES, NCI State Cancer Profiles. Oladeji &amp; Cuadros (2026), Digital Epidemiology Laboratory, University of Cincinnati. ${location.origin+location.pathname}#c=${p.fips}</div>
+  <script>setTimeout(()=>print(),400)<\/script></body></html>`);
+  w.document.close();
+}
+
+/* ---------------- priority table ---------------- */
+let TSORT={k:"prank",dir:1},TSHOWN=25;
+const TCOLS=[
+  {k:"_r",h:"#",r:1},{k:"name",h:"County"},{k:"st",h:"State"},
+  {k:"priority",h:"Priority",f:p=>lvlCell("priority",p.priority)},
+  {k:"access",h:"Barrier to care",f:p=>lvlCell("access",p.access)},
+  {k:"screen",h:"Screened",r:1,f:p=>p.screen==null?"n/a":fmt(p.screen,1)+"%"},
+  {k:"gap",h:"Below goal",r:1,f:p=>p.gap==null?"n/a":fmt(p.gap,1)+" pts"},
+  {k:"obgyn",h:"OB/GYNs per 10k",r:1,f:p=>p.obgyn==null?"n/a":fmt(p.obgyn,1)},
+  {k:"unins",h:"Uninsured",r:1,f:p=>p.unins==null?"n/a":fmt(p.unins,1)+"%"},
+  {k:"prank",h:"U.S. rank",r:1,f:p=>fmt(p.prank)},
+  {k:"db",h:"Double burden",f:p=>p.db?'<span class="dbdot">● Yes</span>':""}
+];
+function lvlCell(l,v){const x=levelOf(l,v);return `<span class="lvl"><i style="background:${x.c}"></i>${x.t}</span>`;}
+function tableRows(){
+  const q=$("#tQ").value.trim().toLowerCase(),db=$("#tDB").checked,nb=$("#tNoob").checked;
+  let r=DATA.filter(p=>(!STATE||p.st===STATE)&&(!db||p.db)&&(!nb||p.obn===0)&&(!q||p.name.toLowerCase().includes(q)));
+  const k=TSORT.k==="_r"?"prank":TSORT.k;
+  r.sort((a,b)=>{const x=a[k],y=b[k];if(x==null)return 1;if(y==null)return -1;return (typeof x==="string"?x.localeCompare(y):x-y)*TSORT.dir;});
+  return r;
+}
+function buildTable(){
+  const thead=$("#pt thead");
+  thead.innerHTML="<tr>"+TCOLS.map(c=>`<th class="${c.r?"r":""}" data-k="${c.k}">${c.h}${TSORT.k===c.k?(TSORT.dir>0?" ▲":" ▼"):""}</th>`).join("")+"</tr>";
+  thead.querySelectorAll("th").forEach(th=>th.onclick=()=>{const k=th.dataset.k;
+    TSORT=TSORT.k===k?{k,dir:-TSORT.dir}:{k,dir:["priority","access","gap","unins","db"].includes(k)?-1:1};buildTable();});
+  const rows=tableRows(),shown=rows.slice(0,TSHOWN);
+  $("#pt tbody").innerHTML=shown.map((p,i)=>"<tr>"+TCOLS.map(c=>{let v;
+    if(c.k==="_r") v=i+1; else if(c.k==="name") v=`<a data-f="${p.fips}">${esc(p.name)}</a>`; else if(c.f) v=c.f(p); else v=esc(p[c.k]);
+    return `<td class="${c.r?"r num":""}">${v}</td>`;}).join("")+"</tr>").join("");
+  $("#pt tbody").querySelectorAll("a[data-f]").forEach(a=>a.onclick=()=>selectCounty(a.dataset.f,{zoom:true,scroll:false,openBelow:true}));
+  $("#tCount").textContent=`Showing ${fmt(shown.length)} of ${fmt(rows.length)} counties${STATE?" in "+META.states[STATE].name:""}.`;
+  $("#tMore").style.display=rows.length>TSHOWN?"inline-flex":"none";
+}
+function wireTable(){
+  const re=()=>{if(!DATA)return;TSHOWN=25;buildTable();};
+  $("#tQ").addEventListener("input",re);
+  $("#tDB").addEventListener("change",re);
+  $("#tNoob").addEventListener("change",re);
+  $("#tMore").addEventListener("click",()=>{TSHOWN+=25;buildTable();});
+  $("#tCSV").addEventListener("click",()=>DATA&&downloadCSV(tableRows(),"priority_counties"+(STATE?"_"+STATE:"")+".csv"));
+  $("#dlAll").addEventListener("click",()=>DATA&&downloadCSV(DATA,"cervical_access_atlas_counties.csv"));
+}
+wireTable();
+function downloadCSV(rows,name){
+  const cols=[["fips","FIPS"],["name","county"],["st","state"],["prank","us_priority_rank"],["priority","priority_score"],["access","access_index"],["gap","screening_gap_pts"],
+    ["screen","screening_pct"],["obgyn","obgyn_per_10k_women"],["obn","obgyn_count"],["unins","uninsured_pct"],["db","double_burden"],["women","women"],["addr","women_below_screening_goal_est"],["inc","cervical_incidence_per100k"],["mort","cervical_mortality_per100k"]];
+  const q=v=>v==null?"":(/[",\n]/.test(String(v))?`"${String(v).replace(/"/g,'""')}"`:v);
+  const csv=[cols.map(c=>c[1]).join(","),...rows.map(p=>cols.map(c=>q(p[c[0]])).join(","))].join("\n");
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([csv],{type:"text/csv"}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+}
+
+/* ---------------- targeting ---------------- */
+function buildStrategies(){
+  $("#strats").innerHTML=Object.entries(STRATS).map(([k,o])=>`<button class="strat${k===STRAT?" on":""}" data-k="${k}">${o.rec?'<span class="rec">Recommended</span>':""}<span class="dot" style="background:${o.color}"></span><b>${o.label}</b><p>${o.desc}</p></button>`).join("");
+  $$(".strat").forEach(b=>b.onclick=()=>{STRAT=b.dataset.k;$$(".strat").forEach(x=>x.classList.toggle("on",x===b));updateTarget();});
+  $("#bud").addEventListener("input",updateTarget);
+  $("#showT").onclick=()=>{SHOW_T=true;GEO.setStyle(style);const t=tstats(STRAT,+$("#bud").value);
+    $("#mapnoteTxt").textContent=`Outlined: ${STRATS[STRAT].label}, top ${$("#bud").value}% (${fmt(t.k)} counties)`;$("#mapnote").style.display="flex";$("#explore").scrollIntoView({behavior:"smooth"});};
+  $("#clearT").onclick=()=>{SHOW_T=false;GEO.setStyle(style);$("#mapnote").style.display="none";};
+  $("#dlT").onclick=()=>downloadCSV(tstats(STRAT,+$("#bud").value).sel,`targeted_${STRAT}_${$("#bud").value}pct.csv`);
+}
+function tstats(st,b){
+  const k=Math.max(1,Math.round(b/100*N)),sel=ORDER[st].slice(0,k);
+  const w=sel.reduce((s,p)=>s+(p.addr||0),0);
+  return {k,sel,w,share:w/TOTADDR,db:sel.filter(p=>p.db).length,noob:sel.filter(p=>p.obn===0).length,acc:median(sel.map(p=>p.access))};
+}
+function updateTarget(){
+  const b=+$("#bud").value,t=tstats(STRAT,b);
+  $("#budLbl").textContent=b+"%"; $("#budSub").textContent=`About ${fmt(t.k)} of ${fmt(N)} counties.`;
+  $("#kW").textContent=big(t.w); $("#kS").textContent=Math.round(100*t.share)+"%";
+  $("#kDB").textContent=`${fmt(t.db)} of ${fmt(META.us.db)}`;
+  const lv=levelOf("access",t.acc); $("#kAcc").innerHTML=`<span style="color:${lv.c}">${lv.t}</span>`;
+  const all=Object.fromEntries(Object.keys(STRATS).map(k=>[k,tstats(k,b)]));
+  $("#takeaway").innerHTML=`At a ${b}% budget, <b>equity first</b> reaches ${Math.round(100*all.equity.share)}% of under-screened women, <b>balanced</b> ${Math.round(100*all.balanced.share)}%, and <b>reach the most women</b> ${Math.round(100*all.reach.share)}%. Reach-first targets mostly well-served places (typical barrier: ${levelOf("access",all.reach.acc).t.toLowerCase()}), while balanced keeps effort in access-poor counties (typical barrier: ${levelOf("access",all.balanced.acc).t.toLowerCase()}) and still reaches ${Math.round(all.balanced.w/Math.max(1,all.reach.w)*100)}% as many women as reach-first.`;
+  if(SHOW_T){TSET=new Set(t.sel.map(p=>p.fips));GEO.setStyle(style);$("#mapnoteTxt").textContent=`Outlined: ${STRATS[STRAT].label}, top ${b}% (${fmt(t.k)} counties)`;}
+  else TSET=new Set(t.sel.map(p=>p.fips));
+  chart(b);
+}
+function chart(cur){
+  const W=560,H=280,P={l:46,r:16,t:16,b:38},bs=[5,10,15,20,25,30,35,40,45,50];
+  const x=b=>P.l+(b-5)/45*(W-P.l-P.r), y=v=>H-P.b-v*(H-P.t-P.b);
+  let g=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Share of under-screened women reached by budget for each strategy">`;
+  [0,.25,.5,.75,1].forEach(v=>g+=`<line x1="${P.l}" x2="${W-P.r}" y1="${y(v)}" y2="${y(v)}" stroke="#1d2a44"/><text x="${P.l-8}" y="${y(v)+4}" fill="#7f91ab" font-size="11" text-anchor="end">${v*100}%</text>`);
+  bs.forEach(b=>g+=`<text x="${x(b)}" y="${H-P.b+18}" fill="#7f91ab" font-size="11" text-anchor="middle">${b}%</text>`);
+  g+=`<text x="${(W+P.l)/2}" y="${H-4}" fill="#7f91ab" font-size="11" text-anchor="middle">Outreach budget (share of counties)</text>`;
+  g+=`<line x1="${x(cur)}" x2="${x(cur)}" y1="${P.t}" y2="${H-P.b}" stroke="#e7eef8" stroke-dasharray="4 4" opacity=".5"/>`;
+  Object.entries(STRATS).forEach(([k,o])=>{const pts=bs.map(b=>[x(b),y(tstats(k,b).share)]);
+    g+=`<polyline fill="none" stroke="${o.color}" stroke-width="${k===STRAT?3.2:2}" opacity="${k===STRAT?1:.65}" points="${pts.map(p=>p.join(",")).join(" ")}"/>`;
+    const c=tstats(k,cur);g+=`<circle cx="${x(cur)}" cy="${y(c.share)}" r="${k===STRAT?6:4}" fill="${o.color}" stroke="#0d1627" stroke-width="2"/>`;});
+  let ly=y(.72);Object.values(STRATS).forEach(o=>{g+=`<rect x="${W-P.r-150}" y="${ly}" width="12" height="3" fill="${o.color}"/><text x="${W-P.r-132}" y="${ly+5}" fill="#c6d3e6" font-size="11.5">${o.label}</text>`;ly+=17;});
+  $("#chart").innerHTML=g+"</svg>";
+}
+
+/* ---------------- roles ---------------- */
+function wireRoles(){
+  const go=(role)=>{
+    if(role==="state"){$("#priorities").scrollIntoView({behavior:"smooth"});setTimeout(()=>$("#tSt").focus(),600);}
+    else if(role==="county"||role==="community"){$("#explore").scrollIntoView({behavior:"smooth"});setTimeout(()=>$("#q").focus(),600);}
+    else if(role==="funder"){$("#targeting").scrollIntoView({behavior:"smooth"});}
+  };
+  $$("[data-role]").forEach(b=>b.addEventListener("click",()=>go(b.dataset.role)));
+  $$('[data-go="search"]').forEach(a=>a.addEventListener("click",()=>setTimeout(()=>$("#q").focus(),600)));
+}
+</script>
+</body>
+</html>
