@@ -204,7 +204,19 @@ How the index is put together:
   - **Balanced**: ranks counties by 0.65 × (percentile of the addressable gap) + 0.35 × (access index). The 0.65 weight was chosen from the efficiency–equity frontier analysis. It keeps most of the reach of the volume-based approach while targeting counties with a median barrier in the "High" band.
 - These are **planning estimates of reach**, not predictions of cancers prevented.
 
-### 6.6 Software
+### 6.6 How the atlas numbers relate to the published paper
+The atlas covers the **contiguous U.S.** The companion paper (Paper 1) reports **national** figures that also include Alaska (30 boroughs/census areas) and Hawaii (5 counties). All inputs, data years and methods are identical, and every county's scores are the same in both. Only the set of counties counted differs.
+
+| Figure | Paper (50 states + DC) | Atlas (contiguous U.S.) | Difference |
+|---|---:|---:|---|
+| Counties | 3,144 | 3,109 | 35 counties in Alaska and Hawaii |
+| Counties with no OB/GYN | 1,446 | 1,424 | 22 in Alaska and Hawaii |
+| Double-burden counties | 322 | 304 | 18 in Alaska and Hawaii |
+| Women in double-burden counties | ≈ 4.8 million | ≈ 4.6 million | ≈ 187,000 women in Alaska and Hawaii |
+
+Double-burden status and percentiles were computed nationally (3,144 counties) and then mapped for the contiguous states. They were **not** recomputed on the contiguous subset, so a county's score is the same in the paper and the atlas.
+
+### 6.7 Software
 - Analysis pipeline: Python (pandas, geopandas), with numbered, version-controlled scripts.
 - Website: static HTML, JavaScript and Leaflet 1.9.4. No server, no tracking and no API keys; all calculations run in the reader's browser.
 
