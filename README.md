@@ -85,7 +85,8 @@ All figures cover the contiguous U.S. (3,109 counties). Alaska and Hawaii are no
 - **92% of counties are below the national screening goal.** The median county has 81% of women up to date, about 3 points short of 84.3%.
 - **1,424 counties (46%) have no practicing OB/GYN.** About 10 million women live in them.
 - **304 counties carry a "double burden"**: they are in the worst fifth of the country for both low screening and high access barriers. About **4.6 million women** live in them.
-- **Double-burden counties are concentrated in the South, above all in Texas.** 188 of the 304 are in Texas, followed by Oklahoma (29), Georgia (15) and Florida (15). The highest-priority counties nationally are along the Texas–Mexico border and in West Texas, for example Presidio, Zapata, Hudspeth and Starr counties.
+- **Double-burden counties are concentrated in Texas and the southern Plains**, with smaller clusters in the Southeast and the northern Plains. Texas leads under both screening sources tested (188 counties with CDC PLACES, 101 with NCI 2021–23 estimates). The highest-priority counties nationally are along the Texas–Mexico border and in West Texas, for example Presidio, Zapata, Hudspeth and Starr counties.
+- **Treat the county list as indicative, not definitive.** County screening estimates are imprecise. When an independent NCI 2021–23 screening source replaces PLACES, overall rankings and the link to cancer outcomes hold, but only **144 of the 304** double-burden counties are flagged by both sources. The atlas marks these as "both sources"; they are the most robust priorities.
 - **A typical double-burden county looks like this**, compared with other counties:
 
   | Measure | Double-burden counties | Other counties |
@@ -245,6 +246,18 @@ The validation plan was **pre-registered** (analysis plan locked 13 October 2026
 
 These are **ecological associations**: they describe counties, not individuals, and do not prove that the barriers cause cancer. The test for late-stage incidence in held-out states was not positive, and we report that openly.
 
+**Sensitivity to the screening source.** The screening-dependent layers were re-run with NCI small-area estimates (Pap test within 3 years, women 21–65, 2021–23, BRFSS + NHIS) for 3,100 counties:
+
+| Check | Result |
+|---|---|
+| Do the two sources rank county screening alike? | Moderately (ρ = 0.41); county estimates are imprecise (median NCI 95% interval ≈ 43 points) |
+| Does the priority ranking hold? | Yes, broadly (ρ = 0.78; 66% of the top-fifth counties shared) |
+| Does priority still track cancer outcomes? | Yes: incidence ρ = 0.56 vs 0.61; mortality ρ = 0.51 vs 0.46 |
+| Do double-burden counties still have more cancer? | Yes: incidence 15.2 vs 8.4 per 100,000 |
+| Is it the same set of double-burden counties? | Partly: 144 of 304 (47%) are flagged by both |
+
+The access index uses no screening data, so it is unaffected. Full report: `06_Documentation/screening_source_sensitivity.md`.
+
 Full validation reports are in the project repository (`06_Documentation/outcome_validation.md`).
 
 ---
@@ -266,7 +279,7 @@ Full validation reports are in the project repository (`06_Documentation/outcome
 
 **Known limitations:**
 
-- **Screening rates are model-based estimates** from CDC PLACES (2020 BRFSS survey data). This is the only source that covers every county, and it is the last release of the measure: CDC dropped it after the 2022 BRFSS question change, so no newer county series exists. Small-county estimates are statistically smoothed and may differ from local registry or claims data, and 2020 was a pandemic year when screening dipped. These limits affect only the screening shortfall, priority and double-burden layers. The access index contains no screening data, and its validation against NCI cancer registry outcomes is independent of PLACES.
+- **Screening rates are model-based estimates** from CDC PLACES (2020 BRFSS survey data). This is the only source that covers every county, and it is the last release of the measure: CDC dropped it after the 2022 BRFSS question change, so no newer PLACES county series exists. Small-county estimates are statistically smoothed and may differ from local registry or claims data, and 2020 was a pandemic year when screening dipped. These limits affect only the screening shortfall, priority and double-burden layers, and a sensitivity check with NCI 2021–23 estimates showed the aggregate findings hold while individual county membership is less certain (see Section 7). The access index contains no screening data, and its validation against NCI cancer registry outcomes is independent of PLACES.
 - **HPV vaccination is not in the score.** No national county-level HPV vaccination data exist: CDC's National Immunization Survey–Teen reports states and selected local areas, and state immunization registries differ in coverage and access. This is also a matter of design. The index measures structural barriers to care (insurance, specialists, distance), not uptake behaviours such as vaccination or screening. And because the vaccine was introduced in 2006 for adolescents and young adults, most women developing cervical cancer today were past vaccine age, so screening is the main prevention lever for current burden. Vaccination will matter more as vaccinated cohorts reach screening age.
 - **Travel time is approximated** by density and distance to a large population center, not by road travel time to the nearest OB/GYN. Road-network travel time is the planned next enhancement.
 - **OB/GYN counts measure physicians, not services.** They do not capture family physicians, nurse practitioners, health centers or mobile units that also provide screening.
@@ -306,6 +319,7 @@ All data are free and public. No data use agreements were required.
 | `priority` | Combined priority score | 0–100, higher = higher priority |
 | `prank` | U.S. priority rank | 1 = highest priority |
 | `db` | Double-burden county | true / false |
+| `db2` | For double-burden counties: also flagged when NCI 2021–23 screening estimates replace PLACES ("both sources") | true / false |
 | `screen` | Women aged 21–65 up to date on cervical screening | % |
 | `obgyn` | OB/GYN physicians in patient care per 10,000 women | rate |
 | `obn` | Number of OB/GYN physicians in patient care | count |
